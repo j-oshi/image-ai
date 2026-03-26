@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Variant Studio</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 20px; }
+        .controls { background: #2a2a2a; padding: 20px; border-radius: 8px; display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        input { padding: 10px; border-radius: 4px; border: none; width: 300px; }
+        button { padding: 10px 20px; background: #4a90e2; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #555; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: 20px; }
+        .card { background: #2a2a2a; border-radius: 8px; overflow: hidden; position: relative; }
+        .card img { width: 100%; display: block; }
+        .card-info { padding: 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .timer { font-family: monospace; color: #ffcc00; margin-bottom: 10px; }
+        .download-btn { color: #4a90e2; text-decoration: none; font-weight: bold; border: 1px solid #4a90e2; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <h2>AI Image Variant Studio</h2>
+    
+    <div class="controls">
+        <div class="input-group">
+            <label>Prompt</label>
+            <input type="text" id="prompt" value="Children in a school bus">
+        </div>
+        <div class="input-group">
+            <label>Variants</label>
+            <select id="variants" style="padding: 10px;">
+                <option value="1">1 Variant</option>
+                <option value="2">2 Variants</option>
+                <option value="4" selected>4 Variants</option>
+            </select>
+        </div>
+        <button id="go">Generate</button>
+    </div>
+
+    <div id="timer" class="timer">Ready</div>
+    <div id="grid" class="grid"></div>
+
+    <script>
+        const btn = document.getElementById('go');
+        const grid = document.getElementById('grid');
+        const timerText = document.getElementById('timer');
+
+        async function fetchImage(prompt) {
+            const body = new URLSearchParams();
+            body.append('prompt', prompt);
+            // No seed sent = random variant per request
+            
+            const resp = await fetch('http://localhost:5000/test-generate', {
+                method: 'POST',
+                body: body
+            });
+            const blob = await resp.blob();
+            return {
+                url: URL.createObjectURL(blob),
+                seed: resp.headers.get('x-used-seed')
+            };
+        }
+
+        btn.onclick = async () => {
+            const prompt = document.getElementById('prompt').value;
+            const count = document.getElementById('variants').value;
+            
+            btn.disabled = true;
+            grid.innerHTML = '';
+            const start = performance.now();
+            
+            // Start UI Timer
+            const clock = setInterval(() => {
+                timerText.innerText = `Executing: ${((performance.now() - start)/1000).toFixed(2)}s`;
+            }, 100);
+
+            try {
+                // Request variants in parallel
+                const tasks = Array.from({length: count}).map(() => fetchImage(prompt));
+                const results = await Promise.all(tasks);
+                
+                results.forEach((res, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `
+                        <img src="${res.url}">
+                        <div class="card-info">
+                            <span>Seed: ${res.seed}</span>
+                            <a href="${res.url}" download="gen_${res.seed}.png" class="download-btn">Save</a>
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                });
+            } catch (e) {
+                alert("Generation Error: Check if backend is READY");
+            } finally {
+                clearInterval(clock);
+                btn.disabled = false;
+                timerText.innerText += " (Done!)";
+            }
+        };
+    </script>
+</body>
+</html>

@@ -43,7 +43,7 @@ services:
     volumes:
       - ./hf_cache:/root/.cache/huggingface
       - ./outputs:/app/outputs
-      - .:/app  # <--- ADD THIS LINE: Maps your local code to the container
+      - .:/app  # <--- Maps local code to the container
     deploy:
       resources:
         reservations:

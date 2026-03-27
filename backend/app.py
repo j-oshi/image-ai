@@ -3,13 +3,14 @@ import torch
 import os
 import sys
 import random
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, File, UploadFile
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from diffusers import StableDiffusionInpaintPipeline
 from PIL import Image
 from io import BytesIO
 from contextlib import asynccontextmanager
+import numpy as np
 
 # Global variables
 pipe = None
@@ -64,34 +65,75 @@ def health():
     }
 
 @app.post("/test-generate")
-async def test_generate(prompt: str = Form(...), seed: int = Form(None)):
+async def test_generate(
+    prompt: str = Form(...), 
+    seed: int = Form(None),
+    image: UploadFile = File(None), # Added
+    mask: UploadFile = File(None)   # Added
+):
     if pipe is None:
         return Response(content="Model not ready yet", status_code=503)
         
-    # Use provided seed or generate a random one
     effective_seed = seed if seed is not None else random.randint(0, 10**6)
     generator = torch.Generator("cuda").manual_seed(effective_seed)
 
-    init_image = Image.new("RGB", (512, 512), (255, 255, 255))
-    mask_image = Image.new("L", (512, 512), 255)
+    # If we have an image and a mask, use them for inpainting
+    if image and mask:
+        init_img = Image.open(BytesIO(await image.read())).convert("RGB").resize((512, 512))
+        mask_img = Image.open(BytesIO(await mask.read())).convert("L").resize((512, 512))
+    else:
+        # Fallback to your original white square logic
+        init_img = Image.new("RGB", (512, 512), (255, 255, 255))
+        mask_img = Image.new("L", (512, 512), 255)
     
     with torch.inference_mode():
-        image = pipe(
+        output = pipe(
             prompt=prompt, 
-            image=init_image, 
-            mask_image=mask_image,
+            image=init_img, 
+            mask_image=mask_img,
             generator=generator
         ).images[0]
     
     img_byte_arr = BytesIO()
-    image.save(img_byte_arr, format='PNG')
+    output.save(img_byte_arr, format='PNG')
     
-    # Return seed in headers so the UI knows which one was used
     return Response(
         content=img_byte_arr.getvalue(), 
         media_type="image/png",
         headers={"x-used-seed": str(effective_seed)}
     )
+
+@app.post("/edit-image")
+async def edit_image(
+    image_data: bytes, 
+    target_object: str = Form(...), 
+    replacement_prompt: str = Form(...)
+):
+    # 1. Ask Llama-Server for detection
+    # Note: Qwen-VL often uses a specific prompt format for detection
+    llama_prompt = f"Detect the {target_object} in this image and provide bounding box coordinates."
+    
+    # Send image to llama-server /completion or /v1/chat/completions
+    # (Assuming llama-server is running on port 8080 as per your docker-compose)
+    # response = requests.post("http://llama-server:8080/completion", ...)
+    
+    # 2. CREATE THE MASK (Simplified Example)
+    # Let's assume Llama returns [100, 100, 300, 400]
+    # You would use PIL to draw a white rectangle on a black background
+    mask = Image.new("L", (512, 512), 0)
+    from PIL import ImageDraw
+    draw = ImageDraw.Draw(mask)
+    draw.rectangle([100, 100, 300, 400], fill=255) # This is the "area to edit"
+
+    # 3. RUN INPAINTING
+    init_image = Image.open(BytesIO(image_data)).convert("RGB").resize((512, 512))
+    
+    with torch.inference_mode():
+        output = pipe(
+            prompt=replacement_prompt,
+            image=init_image,
+            mask_image=mask,
+        ).images[0]
 
 if __name__ == "__main__":
     import uvicorn

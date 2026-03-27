@@ -1,0 +1,21 @@
+# Web Server
+fastapi
+uvicorn
+python-multipart
+
+# AI / Deep Learning
+torch
+torchvision
+transformers
+diffusers
+accelerate
+safetensors
+hf_transfer
+
+# Image Processing
+Pillow
+opencv-python-headless
+numpy
+
+# Utilities
+requests

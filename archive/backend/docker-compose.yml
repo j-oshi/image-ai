@@ -1,0 +1,58 @@
+services:
+  # Local LLM Service
+  llama-vision:
+    build:
+      context: .
+      dockerfile: Dockerfile.llama
+    container_name: llama-vision
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      # Main Model
+      - MODEL_PATH=/models/qwen2-vl-7b-q4_k_m.gguf
+      - MODEL_URL=https://huggingface.co/bartowski/Qwen2-VL-7B-Instruct-GGUF/resolve/main/Qwen2-VL-7B-Instruct-Q4_K_M.gguf
+      # Vision Projector (Essential for "seeing")
+      - MMPROJ_PATH=/models/qwen2-vl-7b-mmproj.gguf
+      - MMPROJ_URL=https://huggingface.co/bartowski/Qwen2-VL-7B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-7B-Instruct-f16.gguf
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Stable Diffusion + Segmentation Service
+  sd-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.sd
+    container_name: sd-api
+    tty: true
+    ports:
+      - "5000:5000"
+    shm_size: '8gb'
+    volumes:
+      - ./hf_cache:/root/.cache/huggingface
+      - ./outputs:/app/outputs
+      - .:/app  # <--- ADD THIS LINE: Maps your local code to the container
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: python3 app.py
+    environment:
+      - HF_TOKEN=${hf_abc123}
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+      - PYTHONUNBUFFERED=1

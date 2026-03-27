@@ -208,3 +208,5 @@ __marimo__/
 
 hf_cache/
 models/
+*/hf_cache/
+*/models/

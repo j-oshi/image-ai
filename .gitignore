@@ -210,3 +210,5 @@ hf_cache/
 models/
 */hf_cache/
 */models/
+*.onnx
+

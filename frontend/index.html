@@ -1,124 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Studio</title>
-    <style>
-        body { font-family: -apple-system, sans-serif; background: #121212; color: white; display: flex; justify-content: center; padding: 40px; }
-        .container { width: 100%; max-width: 900px; }
-        .controls { background: #1e1e1e; padding: 20px; border-radius: 12px; display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; }
-        .field { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
-        input, select, button { padding: 12px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: white; font-size: 1rem; }
-        button { background: #3d5afe; cursor: pointer; border: none; font-weight: bold; min-width: 120px; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        
-        .timer { font-family: monospace; color: #00e676; margin-bottom: 10px; height: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        
-        .card { background: #1e1e1e; border-radius: 8px; overflow: hidden; border: 1px solid #333; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .card img { width: 100%; height: auto; display: block; background: #000; min-height: 250px; }
-        .card-actions { padding: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .download-link { color: #00e676; text-decoration: none; font-size: 0.8rem; border: 1px solid #00e676; padding: 4px 8px; border-radius: 4px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Vision Platform</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background: #f5f7fb; color: #222; }
+
+    /* Top Nav */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+
+    .nav h2 { font-size: 20px; }
+
+    .nav a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .nav a:hover { color: #4f46e5; }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 80px 20px 40px;
+    }
+
+    .hero h1 {
+      font-size: 36px;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: #666;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Cards */
+    .cards {
+      max-width: 1100px;
+      margin: 40px auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 0 20px 60px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 25px;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      transition: 0.25s;
+      text-align: left;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 5px 12px;
+      background: #e0e7ff;
+      color: #4338ca;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Stable Diffusion Studio</h2>
-    
-    <div class="controls">
-        <div class="field">
-            <label>Prompt</label>
-            <input type="text" id="promptInput" placeholder="A futuristic city in the clouds..." value="Children in a school bus">
-        </div>
-        <div class="field" style="flex-grow: 0;">
-            <label>Variants</label>
-            <select id="variantCount">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="4" selected>4</option>
-            </select>
-        </div>
-        <button id="generateBtn">Generate</button>
+  <div class="nav">
+    <h2>AI Vision</h2>
+    <div>
+      <a href="#">Docs</a>
+      <a href="#">Models</a>
+      <a href="#">GitHub</a>
+    </div>
+  </div>
+
+  <section class="hero">
+    <h1>Build with AI Vision</h1>
+    <p>Explore powerful tools for image generation, object detection, and multimodal understanding. Choose a workflow to get started.</p>
+  </section>
+
+  <section class="cards">
+
+    <div class="card" onclick="navigate('image-varient-generation.html')">
+      <h3>Image Generation</h3>
+      <p>Create images from text prompts using diffusion models. Control style, lighting, and composition.</p>
+      <span class="tag">Stable Diffusion</span>
     </div>
 
-    <div id="timerDisplay" class="timer"></div>
-    <div id="imageGrid" class="grid"></div>
-</div>
+    <div class="card" onclick="navigate('object-detection.html')">
+      <h3>LLM Vision Detection</h3>
+      <p>Use models like Qwen 3 VL to detect, describe, and reason about objects in images.</p>
+      <span class="tag">Multimodal AI</span>
+    </div>
 
-<script>
-    const generateBtn = document.getElementById('generateBtn');
-    const promptInput = document.getElementById('promptInput');
-    const variantCount = document.getElementById('variantCount');
-    const imageGrid = document.getElementById('imageGrid');
-    const timerDisplay = document.getElementById('timerDisplay');
+    <div class="card" onclick="navigate('realtime.html')">
+      <h3>Real-Time Detection</h3>
+      <p>Run fast object detection on video streams with optimized pipelines and edge models.</p>
+      <span class="tag">YOLO / Edge</span>
+    </div>
 
-    async function generateImage(prompt, index) {
-        const formData = new URLSearchParams();
-        formData.append('prompt', prompt);
+    <div class="card" onclick="navigate('annotation.html')">
+      <h3>Dataset Annotation</h3>
+      <p>Label images with bounding boxes and segmentation masks for training datasets.</p>
+      <span class="tag">Data Tools</span>
+    </div>
 
-        // We use a timestamp to prevent browser caching of the response
-        const response = await fetch(`http://localhost:5000/test-generate?t=${Date.now()}-${index}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
-        });
+  </section>
 
-        if (!response.ok) throw new Error('Generation failed');
-        
-        const blob = await response.blob();
-        return URL.createObjectURL(blob);
+  <div class="footer">
+    © 2026 AI Vision Platform
+  </div>
+
+  <script>
+    function navigate(page) {
+    //   alert('Navigate to: ' + page);
+      window.location.href = page;
     }
-
-    generateBtn.addEventListener('click', async () => {
-        const prompt = promptInput.value;
-        const count = parseInt(variantCount.value);
-        
-        // Reset UI
-        imageGrid.innerHTML = '';
-        generateBtn.disabled = true;
-        const startTime = performance.now();
-        
-        // Timer Interval
-        const timerInt = setInterval(() => {
-            const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
-            timerDisplay.innerText = `Execution Time: ${elapsed}s`;
-        }, 50);
-
-        try {
-            // Create placeholders
-            const promises = [];
-            for (let i = 0; i < count; i++) {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `<div style="padding: 100px 0; text-align: center;">Loading...</div>`;
-                imageGrid.appendChild(card);
-                
-                // Fire off parallel requests
-                promises.push(
-                    generateImage(prompt, i).then(url => {
-                        card.innerHTML = `
-                            <img src="${url}" alt="Generated AI Image">
-                            <div class="card-actions">
-                                <span>Variant ${i+1}</span>
-                                <a href="${url}" download="variant-${i+1}.png" class="download-link">Save Image</a>
-                            </div>
-                        `;
-                    })
-                );
-            }
-
-            await Promise.all(promises);
-        } catch (err) {
-            alert("Error: " + err.message);
-        } finally {
-            clearInterval(timerInt);
-            generateBtn.disabled = false;
-        }
-    });
-</script>
+  </script>
 
 </body>
 </html>

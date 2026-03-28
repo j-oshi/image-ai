@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Studio</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #121212; color: white; display: flex; justify-content: center; padding: 40px; }
+        .container { width: 100%; max-width: 900px; }
+        .controls { background: #1e1e1e; padding: 20px; border-radius: 12px; display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; }
+        .field { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
+        input, select, button { padding: 12px; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: white; font-size: 1rem; }
+        button { background: #3d5afe; cursor: pointer; border: none; font-weight: bold; min-width: 120px; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        
+        .timer { font-family: monospace; color: #00e676; margin-bottom: 10px; height: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        
+        .card { background: #1e1e1e; border-radius: 8px; overflow: hidden; border: 1px solid #333; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: auto; display: block; background: #000; min-height: 250px; }
+        .card-actions { padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .download-link { color: #00e676; text-decoration: none; font-size: 0.8rem; border: 1px solid #00e676; padding: 4px 8px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Stable Diffusion Studio</h2>
+    
+    <div class="controls">
+        <div class="field">
+            <label>Prompt</label>
+            <input type="text" id="promptInput" placeholder="A futuristic city in the clouds..." value="Children in a school bus">
+        </div>
+        <div class="field" style="flex-grow: 0;">
+            <label>Variants</label>
+            <select id="variantCount">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="4" selected>4</option>
+            </select>
+        </div>
+        <button id="generateBtn">Generate</button>
+    </div>
+
+    <div id="timerDisplay" class="timer"></div>
+    <div id="imageGrid" class="grid"></div>
+</div>
+
+<script>
+    const generateBtn = document.getElementById('generateBtn');
+    const promptInput = document.getElementById('promptInput');
+    const variantCount = document.getElementById('variantCount');
+    const imageGrid = document.getElementById('imageGrid');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    async function generateImage(prompt, index) {
+        const formData = new URLSearchParams();
+        formData.append('prompt', prompt);
+
+        // We use a timestamp to prevent browser caching of the response
+        const response = await fetch(`http://localhost:5000/test-generate?t=${Date.now()}-${index}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+
+        if (!response.ok) throw new Error('Generation failed');
+        
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+    }
+
+    generateBtn.addEventListener('click', async () => {
+        const prompt = promptInput.value;
+        const count = parseInt(variantCount.value);
+        
+        // Reset UI
+        imageGrid.innerHTML = '';
+        generateBtn.disabled = true;
+        const startTime = performance.now();
+        
+        // Timer Interval
+        const timerInt = setInterval(() => {
+            const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+            timerDisplay.innerText = `Execution Time: ${elapsed}s`;
+        }, 50);
+
+        try {
+            // Create placeholders
+            const promises = [];
+            for (let i = 0; i < count; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<div style="padding: 100px 0; text-align: center;">Loading...</div>`;
+                imageGrid.appendChild(card);
+                
+                // Fire off parallel requests
+                promises.push(
+                    generateImage(prompt, i).then(url => {
+                        card.innerHTML = `
+                            <img src="${url}" alt="Generated AI Image">
+                            <div class="card-actions">
+                                <span>Variant ${i+1}</span>
+                                <a href="${url}" download="variant-${i+1}.png" class="download-link">Save Image</a>
+                            </div>
+                        `;
+                    })
+                );
+            }
+
+            await Promise.all(promises);
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            clearInterval(timerInt);
+            generateBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

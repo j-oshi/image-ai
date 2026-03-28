@@ -14,7 +14,7 @@ import numpy as np
 
 # Global variables
 pipe = None
-MODEL_ID = "runwayml/stable-diffusion-inpainting"
+MODEL_ID = "runwayml/stable-diffusion-inpainting" # graphic card memory is currently 4gb will do for now.
 loading_status = "initializing"
 
 def load_model_background():

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Background Compositor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --text: #f8fafc;
+            --accent: #10b981;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg); color: var(--text);
+            margin: 0; display: flex; flex-direction: column; align-items: center;
+        }
+
+        .toolbar {
+            background: var(--panel); padding: 1rem; width: 100%;
+            display: flex; gap: 1rem; justify-content: center; align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .timer-display {
+            font-family: monospace; background: #000; padding: 0.5rem;
+            border-radius: 4px; color: var(--accent); min-width: 65px; text-align: center;
+        }
+
+        .canvas-container-wrapper {
+            margin-top: 2rem; border: 2px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            background: var(--primary); color: white; border: none;
+            padding: 0.6rem 1.2rem; border-radius: 4px; cursor: pointer; font-weight: 600;
+        }
+
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        input[type="text"] {
+            padding: 0.6rem; border-radius: 4px; border: 1px solid #334155;
+            background: #0f172a; color: white; width: 300px;
+        }
+        
+        #file-input { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <input type="text" id="prompt-input" placeholder="Enter background prompt...">
+    <div id="timer" class="timer-display">0.0s</div>
+    <button id="gen-btn" onclick="handleGeneration()">Generate BG</button>
+    
+    <button style="background: #475569;" onclick="document.getElementById('file-input').click()">Upload Foreground</button>
+    <input type="file" id="file-input" accept="image/*" onchange="handleUpload(event)">
+    
+    <button style="background: #475569;" id="undo-btn" onclick="undo()" disabled>Undo</button>
+    <button style="background: var(--accent);" onclick="saveImage()">Save Final</button>
+    <button style="background: #ef4444;" id="delete-btn" onclick="deleteSelected()" disabled>Delete Selected</button>
+</div>
+
+<div class="canvas-container-wrapper">
+    <canvas id="main-canvas"></canvas>
+</div>
+
+<script>
+    let canvas;
+    let history = [];
+    let timerInterval;
+    const MAX_HISTORY = 20;
+
+    window.onload = () => {
+        canvas = new fabric.Canvas('main-canvas', {
+            width: 800, height: 500, backgroundColor: '#1e293b'
+        });
+        // Toggle Delete button visibility based on selection
+        canvas.on('selection:created', () => document.getElementById('delete-btn').disabled = false);
+        canvas.on('selection:cleared', () => document.getElementById('delete-btn').disabled = true);
+
+        canvas.on('object:modified', saveHistory);
+        canvas.on('object:added', saveHistory);
+
+        // 2. Keyboard Listener for Delete/Backspace
+        window.addEventListener('keydown', (e) => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && 
+                document.activeElement.tagName !== 'INPUT') { // Don't delete if typing in prompt
+                deleteSelected();
+            }
+        });
+    };
+
+    // --- TIMER LOGIC ---
+    function startTimer() {
+        const startTime = performance.now();
+        const display = document.getElementById('timer');
+        timerInterval = setInterval(() => {
+            const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+            display.innerText = `${elapsed}s`;
+        }, 100);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    // --- BACKEND CONNECTION ---
+    async function handleGeneration() {
+        const prompt = document.getElementById('prompt-input').value;
+        if (!prompt) return alert("Enter a prompt!");
+
+        const btn = document.getElementById('gen-btn');
+        btn.disabled = true;
+        startTimer();
+
+        try {
+            // Using FormData to match your FastAPI Form(...) and File(...) requirements
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+
+            // Fetching with cache-busting timestamp
+            const response = await fetch(`http://localhost:5000/test-generate?t=${Date.now()}`, {
+                method: 'POST',
+                body: formData // Browser automatically sets multipart/form-data
+            });
+
+            if (!response.ok) throw new Error('Backend failed');
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            
+            fabric.Image.fromURL(url, (img) => {
+                canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+                    scaleX: canvas.width / img.width,
+                    scaleY: canvas.height / img.height
+                });
+                saveHistory();
+            });
+
+        } catch (err) {
+            console.error(err);
+            alert("Check if FastAPI server is running on port 5000");
+        } finally {
+            btn.disabled = false;
+            stopTimer();
+        }
+    }
+
+    // --- STICKER & UI LOGIC ---
+    function handleUpload(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            fabric.Image.fromURL(f.target.result, (img) => {
+                img.scaleToWidth(300);
+                canvas.add(img).setActiveObject(img);
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function saveHistory() {
+        history.push(JSON.stringify(canvas));
+        if (history.length > MAX_HISTORY) history.shift();
+        document.getElementById('undo-btn').disabled = history.length <= 1;
+    }
+
+    function undo() {
+        if (history.length <= 1) return;
+        history.pop();
+        canvas.loadFromJSON(history[history.length - 1], () => {
+            canvas.renderAll();
+            document.getElementById('undo-btn').disabled = history.length <= 1;
+        });
+    }
+
+    function saveImage() {
+        const link = document.createElement('a');
+        link.download = 'ai-composite.png';
+        link.href = canvas.toDataURL({ format: 'png' });
+        link.click();
+    }
+
+    function deleteSelected() {
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+            canvas.discardActiveObject(); // Clear selection box
+            activeObjects.forEach((obj) => {
+                canvas.remove(obj);
+            });
+            canvas.renderAll();
+            saveHistory(); // Save state so we can 'Undo' the deletion
+            document.getElementById('delete-btn').disabled = true;
+        }
+    }
+</script>
+</body>
+</html>

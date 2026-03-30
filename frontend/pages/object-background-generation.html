@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Background Variations</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f5f7fb;
+  color: #222;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #444;
+  font-size: 14px;
+}
+
+.nav a:hover { color: #4f46e5; }
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 50px 20px 20px;
+}
+
+.hero h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  color: #666;
+}
+
+/* LAYOUT */
+.container {
+  max-width: 1200px;
+  margin: 20px auto 60px;
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* CANVAS */
+.canvas-box {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* CONTROL PANEL */
+.controls {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+}
+
+label {
+  font-size: 13px;
+  color: #555;
+  display: block;
+  margin-bottom: 5px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-bottom: 15px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.primary { background: #4f46e5; color: white; }
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* STATUS */
+#status {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+#timer-display {
+  font-family: monospace;
+  color: #10b981;
+  margin-bottom: 10px;
+}
+
+/* VARIATIONS */
+.variation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.variation-card {
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  transition: 0.2s;
+}
+
+.variation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.variation-card img {
+  width: 100%;
+}
+
+.seed-tag {
+  font-size: 11px;
+  padding: 4px;
+  background: #4f46e5;
+  color: white;
+  text-align: center;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <h2>AI Vision</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="#">Docs</a>
+    <a href="#">Models</a>
+    <a href="#">GitHub</a>
+  </div>
+</div>
+
+<div style="text-align:left; margin-top:20px; margin-left:20px;">
+  <a href="../index.html" style="
+    text-decoration:none;
+    color:#4f46e5;
+    font-size:14px;
+    border:1px solid #e5e7eb;
+    padding:6px 12px;
+    border-radius:8px;
+    background:#fff;
+  ">
+    ← Back to Home
+  </a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>AI Background Variations</h1>
+  <p>Isolate objects and generate multiple AI-powered background variations.</p>
+</section>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- CANVAS -->
+  <div class="canvas-box">
+    <canvas id="crop-canvas"></canvas>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <label>Source Image</label>
+    <input type="file" id="upload" accept="image/*" onchange="loadImage(event)">
+    
+    <label>Describe New Scene</label>
+    <textarea id="bg-prompt" rows="3" placeholder="A futuristic laboratory with neon lights..."></textarea>
+    
+    <div id="status">Ready to isolate object.</div>
+    <div id="timer-display">Time: 0.0s</div>
+
+    <button id="gen-btn" class="primary" onclick="generateVariations()">Generate 4 Variants</button>
+
+    <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+    <label>Variations</label>
+    <div class="variation-grid" id="results"></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2026 AI Vision Platform
+</div>
+
+<script>
+let canvas, boundingBox, timerInterval;
+
+window.onload = () => {
+  canvas = new fabric.Canvas('crop-canvas', {
+    width: 600,
+    height: 600,
+    backgroundColor: '#ffffff'
+  });
+
+  boundingBox = new fabric.Rect({
+    left: 150, top: 150, width: 200, height: 200,
+    fill: 'rgba(79,70,229,0.2)',
+    stroke: '#4f46e5',
+    strokeDashArray: [5,5],
+    strokeWidth: 2,
+    cornerColor: '#4f46e5',
+    cornerSize: 10,
+    transparentCorners: false
+  });
+};
+
+   function loadImage(e) {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            fabric.Image.fromURL(f.target.result, (img) => {
+                canvas.clear();
+                img.scaleToWidth(canvas.width);
+                canvas.add(img);
+                canvas.sendToBack(img);
+                canvas.add(boundingBox);
+                canvas.setActiveObject(boundingBox);
+                document.getElementById('status').innerText = "Adjust box around the object.";
+            });
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    async function fetchImage(prompt, fullCanvasBlob, maskBlob) {
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('image', fullCanvasBlob, 'image.png');
+        formData.append('mask', maskBlob, 'mask.png');
+        
+        const resp = await fetch('http://localhost:5000/test-generate', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!resp.ok) throw new Error("Backend error");
+        const blob = await resp.blob();
+        return {
+            url: URL.createObjectURL(blob),
+            seed: resp.headers.get('x-used-seed') || 'N/A'
+        };
+    }
+
+    async function generateVariations() {
+        const promptInput = document.getElementById('bg-prompt').value;
+        const btn = document.getElementById('gen-btn');
+        const resultsContainer = document.getElementById('results');
+        const status = document.getElementById('status');
+        const timerElement = document.getElementById('timer-display');
+        
+        if(!promptInput) return alert("Enter a prompt!");
+        if(!canvas.getObjects('image').length) return alert("Upload an image first!");
+
+        // --- STEP 1: PREPARE THE IMAGES ---
+        btn.disabled = true;
+        status.innerText = "Capturing layers...";
+
+        // A. The Full Image (Init Image)
+        boundingBox.set('stroke', 'transparent'); // Hide box for clean capture
+        canvas.renderAll();
+        const fullImageBlob = await new Promise(res => canvas.getElement().toBlob(res, 'image/png'));
+
+        // B. The Mask (White = area to change, Black = area to keep)
+        // Note: We want to keep what is INSIDE the box, so inside must be BLACK.
+        const mainImage = canvas.getObjects('image')[0];
+        const originalBG = canvas.backgroundColor;
+        
+        // Make everything WHITE (change everything)
+        canvas.setBackgroundColor('#ffffff', null);
+        mainImage.set('opacity', 0); // Hide the person
+        
+        // Make the box BLACK (keep this area)
+        boundingBox.set({ fill: '#000000', stroke: 'transparent' });
+        canvas.renderAll();
+        
+        const maskBlob = await new Promise(res => canvas.getElement().toBlob(res, 'image/png'));
+
+        // Restore Canvas UI
+        mainImage.set('opacity', 1);
+        canvas.setBackgroundColor(originalBG, null);
+        boundingBox.set({ fill: 'rgba(99, 102, 241, 0.2)', stroke: '#6366f1' });
+        canvas.renderAll();
+
+        // --- STEP 2: TIMER & API CALL ---
+        resultsContainer.innerHTML = '';
+        status.innerText = "GPU Processing...";
+        const startTime = performance.now();
+        
+        if(timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+            timerElement.innerText = `Time: ${elapsed}s`;
+        }, 100);
+
+        try {
+            const requests = [
+                fetchImage(promptInput, fullImageBlob, maskBlob),
+                fetchImage(promptInput, fullImageBlob, maskBlob),
+                fetchImage(promptInput, fullImageBlob, maskBlob),
+                fetchImage(promptInput, fullImageBlob, maskBlob)
+            ];
+
+            const outputs = await Promise.all(requests);
+            
+            clearInterval(timerInterval);
+            status.innerText = "Batch Complete!";
+
+            outputs.forEach(data => {
+                const card = document.createElement('div');
+                card.className = 'variation-card';
+                card.style.cursor = 'pointer';
+                card.onclick = () => window.open(data.url);
+                card.innerHTML = `
+                    <img src="${data.url}" style="width:100%">
+                    <div class="seed-tag" style="background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px;">Seed: ${data.seed}</div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+
+        } catch (err) {
+            clearInterval(timerInterval);
+            console.error(err);
+            status.innerText = "Error: Check backend.";
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>

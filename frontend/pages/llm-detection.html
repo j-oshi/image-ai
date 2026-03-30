@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local AI Editor</title>
+
+<script type="module" src="../scripts/components/AiPhotoEditor.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f5f7fb;
+  color: #222;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.nav h2 { font-size: 20px; }
+
+.nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #444;
+  font-size: 14px;
+}
+
+.nav a:hover { color: #4f46e5; }
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 50px 20px 20px;
+}
+
+.hero h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  color: #666;
+  font-size: 15px;
+}
+
+/* EDITOR CONTAINER */
+.editor-container {
+  max-width: 1200px;
+  margin: 20px auto 60px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 13px;
+  color: #888;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <h2>AI Vision</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="#">Docs</a>
+    <a href="#">Models</a>
+    <a href="#">GitHub</a>
+  </div>
+</div>
+<div style="text-align:left; margin-top:20px; margin-left:20px;">
+  <a href="../index.html" style="
+    text-decoration:none;
+    color:#4f46e5;
+    font-size:14px;
+    border:1px solid #e5e7eb;
+    padding:6px 12px;
+    border-radius:8px;
+    background:#fff;
+  ">
+    ← Back to Home
+  </a>
+</div>
+<!-- HERO -->
+<section class="hero">
+  <h1>Local AI Editor</h1>
+  <p>Edit, enhance, and generate images using local AI models.</p>
+</section>
+
+<!-- EDITOR -->
+<div class="editor-container">
+  <ai-photo-editor></ai-photo-editor>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2026 AI Vision Platform
+</div>
+
+</body>
+</html>

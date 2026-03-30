@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Image Variant Studio</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f5f7fb;
+  color: #222;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.nav h2 { font-size: 20px; }
+
+.nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #444;
+  font-size: 14px;
+}
+
+.nav a:hover { color: #4f46e5; }
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 60px 20px 30px;
+}
+
+.hero h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  font-size: 15px;
+  color: #666;
+}
+
+/* CONTROLS */
+.controls {
+  max-width: 900px;
+  margin: 30px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-group label {
+  font-size: 13px;
+  color: #555;
+}
+
+input, select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  min-width: 220px;
+}
+
+button {
+  padding: 10px 20px;
+  background: #4f46e5;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:disabled {
+  background: #aaa;
+}
+
+/* TIMER */
+.timer {
+  text-align: center;
+  margin-top: 10px;
+  font-family: monospace;
+  color: #4f46e5;
+}
+
+/* GRID */
+.grid {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 0 20px 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  transition: 0.25s;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.card img {
+  width: 100%;
+  display: block;
+}
+
+.card-info {
+  padding: 10px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.download-btn {
+  text-decoration: none;
+  color: #4f46e5;
+  border: 1px solid #4f46e5;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 13px;
+  color: #888;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <h2>AI Vision</h2>
+  <div>
+    <a href="#">Docs</a>
+    <a href="#">Models</a>
+    <a href="#">GitHub</a>
+  </div>
+</div>
+<div style="text-align:left; margin-top:20px; margin-left:20px;">
+  <a href="../index.html" style="
+    text-decoration:none;
+    color:#4f46e5;
+    font-size:14px;
+    border:1px solid #e5e7eb;
+    padding:6px 12px;
+    border-radius:8px;
+    background:#fff;
+  ">
+    ← Back to Home
+  </a>
+</div>
+<!-- HERO -->
+<section class="hero">
+  <h1>AI Image Variant Studio</h1>
+  <p>Generate multiple variations of prompt using AI. Compare outputs and download your favorites.</p>
+</section>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="input-group">
+    <label>Prompt</label>
+    <input type="text" id="prompt" value="Children in a school bus">
+  </div>
+
+  <div class="input-group">
+    <label>Variants</label>
+    <select id="variants">
+      <option value="1">1 Variant</option>
+      <option value="2">2 Variants</option>
+      <option value="4" selected>4 Variants</option>
+    </select>
+  </div>
+
+  <button id="go">Generate</button>
+</div>
+
+<div id="timer" class="timer">Ready</div>
+
+<!-- RESULTS -->
+<div id="grid" class="grid"></div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2026 AI Vision Platform
+</div>
+
+<script>
+const btn = document.getElementById('go');
+const grid = document.getElementById('grid');
+const timerText = document.getElementById('timer');
+
+async function fetchImage(prompt) {
+  const body = new URLSearchParams();
+  body.append('prompt', prompt);
+
+  const resp = await fetch('http://localhost:5000/test-generate', {
+    method: 'POST',
+    body: body
+  });
+
+  const blob = await resp.blob();
+
+  return {
+    url: URL.createObjectURL(blob),
+    seed: resp.headers.get('x-used-seed')
+  };
+}
+
+btn.onclick = async () => {
+  const prompt = document.getElementById('prompt').value;
+  const count = document.getElementById('variants').value;
+
+  btn.disabled = true;
+  grid.innerHTML = '';
+
+  const start = performance.now();
+
+  const clock = setInterval(() => {
+    timerText.innerText =
+      `Executing: ${((performance.now() - start)/1000).toFixed(2)}s`;
+  }, 100);
+
+  try {
+    const tasks = Array.from({ length: count }).map(() => fetchImage(prompt));
+    const results = await Promise.all(tasks);
+
+    results.forEach((res) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+
+      div.innerHTML = `
+        <img src="${res.url}">
+        <div class="card-info">
+          <span>Seed: ${res.seed}</span>
+          <a href="${res.url}" download="gen_${res.seed}.png" class="download-btn">Save</a>
+        </div>
+      `;
+
+      grid.appendChild(div);
+    });
+
+  } catch (e) {
+    alert("Generation Error: Check if backend is READY");
+  } finally {
+    clearInterval(clock);
+    btn.disabled = false;
+    timerText.innerText += " (Done!)";
+  }
+};
+</script>
+
+</body>
+</html>

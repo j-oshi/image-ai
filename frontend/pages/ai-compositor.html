@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Background Studio</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f5f7fb;
+  color: #222;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #444;
+  font-size: 14px;
+}
+
+.nav a:hover { color: #4f46e5; }
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 50px 20px 20px;
+}
+
+.hero h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  color: #666;
+}
+
+/* TOOLBAR */
+.toolbar {
+  max-width: 1100px;
+  margin: 20px auto;
+  background: #fff;
+  padding: 15px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* INPUT */
+input[type="text"] {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  min-width: 250px;
+}
+
+/* BUTTONS */
+button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary { background: #4f46e5; color: white; }
+.secondary { background: #e5e7eb; }
+.success { background: #10b981; color: white; }
+.danger { background: #ef4444; color: white; }
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* TIMER */
+.timer {
+  font-family: monospace;
+  color: #4f46e5;
+  padding: 6px 10px;
+}
+
+/* CANVAS WRAPPER */
+.canvas-wrapper {
+  max-width: 1100px;
+  margin: 20px auto 60px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <h2>AI Vision</h2>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="#">Docs</a>
+    <a href="#">Models</a>
+    <a href="#">GitHub</a>
+  </div>
+</div>
+<div style="text-align:left; margin-top:20px; margin-left:20px;">
+  <a href="../index.html" style="
+    text-decoration:none;
+    color:#4f46e5;
+    font-size:14px;
+    border:1px solid #e5e7eb;
+    padding:6px 12px;
+    border-radius:8px;
+    background:#fff;
+  ">
+    ← Back to Home
+  </a>
+</div>
+<!-- HERO -->
+<section class="hero">
+  <h1>AI Background Studio</h1>
+  <p>Generate backgrounds and composite images with full control.</p>
+</section>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <input type="text" id="prompt-input" placeholder="Enter background prompt...">
+
+  <button class="primary" id="gen-btn" onclick="handleGeneration()">Generate BG</button>
+
+  <button class="secondary" onclick="document.getElementById('file-input').click()">Upload Foreground</button>
+  <input type="file" id="file-input" hidden accept="image/*" onchange="handleUpload(event)">
+
+  <button class="secondary" id="undo-btn" onclick="undo()" disabled>Undo</button>
+
+  <button class="success" onclick="saveImage()">Save</button>
+
+  <button class="danger" id="delete-btn" onclick="deleteSelected()" disabled>Delete</button>
+
+  <div id="timer" class="timer">0.0s</div>
+</div>
+
+<!-- CANVAS -->
+<div class="canvas-wrapper">
+  <canvas id="main-canvas"></canvas>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2026 AI Vision Platform
+</div>
+
+<script>
+let canvas;
+let history = [];
+let timerInterval;
+const MAX_HISTORY = 20;
+
+window.onload = () => {
+  canvas = new fabric.Canvas('main-canvas', {
+    width: 800,
+    height: 500,
+    backgroundColor: '#ffffff'
+  });
+
+  canvas.on('selection:created', () => document.getElementById('delete-btn').disabled = false);
+  canvas.on('selection:cleared', () => document.getElementById('delete-btn').disabled = true);
+
+  canvas.on('object:modified', saveHistory);
+  canvas.on('object:added', saveHistory);
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'Delete' || e.key === 'Backspace') &&
+        document.activeElement.tagName !== 'INPUT') {
+      deleteSelected();
+    }
+  });
+};
+
+/* TIMER */
+function startTimer() {
+  const start = performance.now();
+  timerInterval = setInterval(() => {
+    document.getElementById('timer').innerText =
+      ((performance.now() - start)/1000).toFixed(1) + "s";
+  }, 100);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+/* GENERATION */
+async function handleGeneration() {
+  const prompt = document.getElementById('prompt-input').value;
+  if (!prompt) return alert("Enter a prompt!");
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  startTimer();
+
+  try {
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+
+    const res = await fetch(`http://localhost:5000/test-generate?t=${Date.now()}`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) throw new Error();
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    fabric.Image.fromURL(url, (img) => {
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+        scaleX: canvas.width / img.width,
+        scaleY: canvas.height / img.height
+      });
+      saveHistory();
+    });
+
+  } catch {
+    alert("Backend error");
+  } finally {
+    btn.disabled = false;
+    stopTimer();
+  }
+}
+
+/* UPLOAD */
+function handleUpload(e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = (f) => {
+    fabric.Image.fromURL(f.target.result, (img) => {
+      img.scaleToWidth(300);
+      canvas.add(img).setActiveObject(img);
+    });
+  };
+
+  reader.readAsDataURL(file);
+}
+
+/* HISTORY */
+function saveHistory() {
+  history.push(JSON.stringify(canvas));
+  if (history.length > MAX_HISTORY) history.shift();
+  document.getElementById('undo-btn').disabled = history.length <= 1;
+}
+
+function undo() {
+  if (history.length <= 1) return;
+
+  history.pop();
+  canvas.loadFromJSON(history[history.length - 1], () => {
+    canvas.renderAll();
+  });
+
+  document.getElementById('undo-btn').disabled = history.length <= 1;
+}
+
+/* SAVE */
+function saveImage() {
+  const link = document.createElement('a');
+  link.download = 'ai-composite.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+
+/* DELETE */
+function deleteSelected() {
+  const objs = canvas.getActiveObjects();
+  objs.forEach(o => canvas.remove(o));
+  canvas.discardActiveObject();
+  canvas.renderAll();
+  saveHistory();
+  document.getElementById('delete-btn').disabled = true;
+}
+</script>
+
+</body>
+</html>

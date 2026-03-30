@@ -4,57 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AI Image Variant Studio</title>
-
+<link rel="stylesheet" href="../styles/styles.css">
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-}
-
-body {
-  background: #f5f7fb;
-  color: #222;
-}
-
-/* NAV */
-.nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
-}
-
-.nav h2 { font-size: 20px; }
-
-.nav a {
-  margin-left: 20px;
-  text-decoration: none;
-  color: #444;
-  font-size: 14px;
-}
-
-.nav a:hover { color: #4f46e5; }
-
-/* HERO */
-.hero {
-  text-align: center;
-  padding: 60px 20px 30px;
-}
-
-.hero h1 {
-  font-size: 32px;
-  margin-bottom: 10px;
-}
-
-.hero p {
-  font-size: 15px;
-  color: #666;
-}
-
 /* CONTROLS */
 .controls {
   max-width: 900px;
@@ -117,33 +68,6 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
-}
-
-/* CARD */
-.card {
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  transition: 0.25s;
-}
-
-.card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-}
-
-.card img {
-  width: 100%;
-  display: block;
-}
-
-.card-info {
-  padding: 10px;
-  font-size: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .download-btn {

@@ -4,93 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Vision Platform</title>
+  <link rel="stylesheet" href="../frontend/styles/styles.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    body { background: #f5f7fb; color: #222; }
 
-    /* Top Nav */
-    .nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 40px;
-      background: #fff;
-      border-bottom: 1px solid #eee;
-    }
 
-    .nav h2 { font-size: 20px; }
-
-    .nav a {
-      margin-left: 20px;
-      text-decoration: none;
-      color: #444;
-      font-size: 14px;
-    }
-
-    .nav a:hover { color: #4f46e5; }
-
-    /* Hero Section */
-    .hero {
-      text-align: center;
-      padding: 80px 20px 40px;
-    }
-
-    .hero h1 {
-      font-size: 36px;
-      margin-bottom: 15px;
-    }
-
-    .hero p {
-      font-size: 16px;
-      color: #666;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    /* Cards */
-    .cards {
-      max-width: 1100px;
-      margin: 40px auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      padding: 0 20px 60px;
-    }
-
-    .card {
-      background: #fff;
-      padding: 25px;
-      border-radius: 16px;
-      border: 1px solid #e5e7eb;
-      cursor: pointer;
-      transition: 0.25s;
-      text-align: left;
-    }
-
-    .card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    .card h3 {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 12px;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 5px 12px;
-      background: #e0e7ff;
-      color: #4338ca;
-      border-radius: 999px;
-      font-size: 12px;
-    }
 
     /* Footer */
     .footer {
@@ -119,13 +36,13 @@
 
   <section class="cards">
 
-    <div class="card" onclick="navigate('pages/image-varient-generation.html')">
+    <div class="card card-plain" onclick="navigate('pages/image-varient-generation.html')">
       <h3>Image Generation</h3>
       <p>Create images from text prompts using diffusion models. Control style, lighting, and composition.</p>
       <span class="tag">Stable Diffusion</span>
     </div>
 
-    <div class="card" onclick="navigate('pages/ai-compositor.html')">
+    <div class="card card-plain" onclick="navigate('pages/ai-compositor.html')">
       <h3>AI Background Studio</h3>
       <p>Generate custom environments with Llama-refined prompts and Stable Diffusion. Composite uploaded images with real-time scaling, rotation, and undo support.</p>
       <div class="tag-container">
@@ -135,13 +52,13 @@
       </div>
     </div>
 
-    <div class="card" onclick="navigate('pages/llm-detection.html')">
+    <div class="card card-plain" onclick="navigate('pages/llm-detection.html')">
       <h3>LLM Vision Detection</h3>
       <p>Use models like Qwen 3 VL to detect, describe, and reason about objects in images.</p>
       <span class="tag">Multimodal AI</span>
     </div>
 
-    <div class="card" onclick="navigate('pages/object-detection.html')">
+    <div class="card card-plain" onclick="navigate('pages/object-detection.html')">
       <h3>Object Detection Studio</h3>
       
       <p>
@@ -154,7 +71,7 @@
       </div>
     </div>
 
-    <div class="card" onclick="navigate('pages/object-background-generation.html')">
+    <div class="card card-plain" onclick="navigate('pages/object-background-generation.html')">
       <h3>Object Background Generation</h3>
       
       <p>

@@ -53,3 +53,38 @@ body {
     max-width: 600px;
     margin: 0 auto;
 }
+
+.llama-card {
+  background: #0f172a; /* deep black/blue */
+  color: #ffffff;
+  border: 1px solid #1e293b;
+  transition: 0.25s;
+}
+
+.llama-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border-color: #4f46e5;
+}
+
+/* Text */
+.llama-card h3 {
+  color: #ffffff;
+}
+
+.llama-card p {
+  color: #cbd5f5; /* soft blue-white */
+}
+
+/* Tags */
+.llama-card .tag {
+  background: #1e293b;
+  color: #60a5fa; /* blue accent */
+  /* border: 1px solid #334155; */
+}
+
+/* Optional: stronger highlight on hover */
+.llama-card:hover .tag {
+  border-color: #4f46e5;
+  color: #93c5fd;
+}

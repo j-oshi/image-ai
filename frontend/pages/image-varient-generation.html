@@ -147,11 +147,26 @@ button:disabled {
 <div class="footer">
   © 2026 Vectragen Platform
 </div>
-
+<toast-notification disapperance-timer timeout="12000"></toast-notification>
+<script src="../scripts/components/toast-notification.js"></script>
 <script>
 const btn = document.getElementById('go');
 const grid = document.getElementById('grid');
 const timerText = document.getElementById('timer');
+const PRIMARY_COLOR = '#fff';
+const PRIMARY_FONT_COLOR = '#000';
+const WARNING_COLOR = '#ffcc00';
+const WARNING_FONT_COLOR = '#5c0b0b';
+const DANGER_COLOR = '#f44336';
+const DANGER_FONT_COLOR = '#fff';
+const SUCCESS_COLOR = '#1a68bc';
+const SUCCESS_FONT_COLOR = '#fff';
+const toastNotification = document.querySelector("toast-notification");
+const showNotification = (bcolor = null, fcolor = null, msg = null) => {
+  toastNotification.setAttribute('background', bcolor || '#000');
+  toastNotification.setAttribute('color', fcolor || '#fff');
+  toastNotification.setAttribute("message", msg || 'Notification');
+}
 
 async function fetchImage(prompt) {
   const body = new URLSearchParams();
@@ -186,8 +201,9 @@ btn.onclick = async () => {
 
   try {
     const tasks = Array.from({ length: count }).map(() => fetchImage(prompt));
+    showNotification(PRIMARY_COLOR, PRIMARY_FONT_COLOR, `Generating ${count} variants ...`);
     const results = await Promise.all(tasks);
-
+    showNotification(SUCCESS_COLOR, SUCCESS_FONT_COLOR, `Image Generation Successful`);
     results.forEach((res) => {
       const div = document.createElement('div');
       div.className = 'card';
@@ -202,9 +218,8 @@ btn.onclick = async () => {
 
       grid.appendChild(div);
     });
-
   } catch (e) {
-    alert("Generation Error: Check if backend is READY");
+    showNotification(DANGER_COLOR, DANGER_FONT_COLOR, `Generation Error: Check if backend is READY.`);
   } finally {
     clearInterval(clock);
     btn.disabled = false;

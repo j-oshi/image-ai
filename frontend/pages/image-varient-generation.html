@@ -153,14 +153,16 @@ button:disabled {
 const btn = document.getElementById('go');
 const grid = document.getElementById('grid');
 const timerText = document.getElementById('timer');
-const PRIMARY_COLOR = '#fff';
-const PRIMARY_FONT_COLOR = '#000';
-const WARNING_COLOR = '#ffcc00';
-const WARNING_FONT_COLOR = '#5c0b0b';
-const DANGER_COLOR = '#f44336';
-const DANGER_FONT_COLOR = '#fff';
-const SUCCESS_COLOR = '#1a68bc';
-const SUCCESS_FONT_COLOR = '#fff';
+const noticationType = {
+  PRIMARY_COLOR :'#fff',
+  PRIMARY_FONT_COLOR: '#000',
+  WARNING_COLOR: '#ffcc00',
+  WARNING_FONT_COLOR: '#5c0b0b',
+  DANGER_COLOR: '#f44336',
+  DANGER_FONT_COLOR: '#fff',
+  SUCCESS_COLOR: '#1a68bc',
+  SUCCESS_FONT_COLOR: '#fff'
+};
 const toastNotification = document.querySelector("toast-notification");
 const showNotification = (bcolor = null, fcolor = null, msg = null) => {
   toastNotification.setAttribute('background', bcolor || '#000');
@@ -201,9 +203,9 @@ btn.onclick = async () => {
 
   try {
     const tasks = Array.from({ length: count }).map(() => fetchImage(prompt));
-    showNotification(PRIMARY_COLOR, PRIMARY_FONT_COLOR, `Generating ${count} variants ...`);
+    showNotification(noticationType.PRIMARY_COLOR, noticationType.PRIMARY_FONT_COLOR, `Generating ${count} variants ...`);
     const results = await Promise.all(tasks);
-    showNotification(SUCCESS_COLOR, SUCCESS_FONT_COLOR, `Image Generation Successful`);
+    showNotification(noticationType.SUCCESS_COLOR, noticationType.SUCCESS_FONT_COLOR, `Image Generation Successful`);
     results.forEach((res) => {
       const div = document.createElement('div');
       div.className = 'card';
@@ -219,7 +221,7 @@ btn.onclick = async () => {
       grid.appendChild(div);
     });
   } catch (e) {
-    showNotification(DANGER_COLOR, DANGER_FONT_COLOR, `Generation Error: Check if backend is READY.`);
+    showNotification(noticationType.DANGER_COLOR, noticationType.DANGER_FONT_COLOR, `Generation Error: Check if backend is READY.`);
   } finally {
     clearInterval(clock);
     btn.disabled = false;

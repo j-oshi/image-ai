@@ -140,12 +140,29 @@ canvas {
 <div class="footer">
   © 2026 Vectragen Platform
 </div>
-
+<toast-notification disapperance-timer timeout="12000"></toast-notification>
+<script src="../scripts/components/toast-notification.js"></script>
 <script>
 let canvas;
 let history = [];
 let timerInterval;
 const MAX_HISTORY = 20;
+const noticationType = {
+  PRIMARY_COLOR :'#fff',
+  PRIMARY_FONT_COLOR: '#000',
+  WARNING_COLOR: '#ffcc00',
+  WARNING_FONT_COLOR: '#5c0b0b',
+  DANGER_COLOR: '#f44336',
+  DANGER_FONT_COLOR: '#fff',
+  SUCCESS_COLOR: '#1a68bc',
+  SUCCESS_FONT_COLOR: '#fff'
+};
+const toastNotification = document.querySelector("toast-notification");
+const showNotification = (bcolor = null, fcolor = null, msg = null) => {
+  toastNotification.setAttribute('background', bcolor || '#000');
+  toastNotification.setAttribute('color', fcolor || '#fff');
+  toastNotification.setAttribute("message", msg || 'Notification');
+};
 
 window.onload = () => {
   canvas = new fabric.Canvas('main-canvas', {
@@ -193,7 +210,8 @@ async function handleGeneration() {
   try {
     const formData = new FormData();
     formData.append('prompt', prompt);
-
+    console.log("Test ui")
+    showNotification(noticationType.PRIMARY_COLOR, noticationType.PRIMARY_FONT_COLOR, `Generating image ...`);
     const res = await fetch(`http://localhost:5000/test-generate?t=${Date.now()}`, {
       method: 'POST',
       body: formData
@@ -201,9 +219,10 @@ async function handleGeneration() {
 
     if (!res.ok) throw new Error();
 
+
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-
+    showNotification(noticationType.SUCCESS_COLOR, noticationType.SUCCESS_FONT_COLOR, `Image Generation Successful`);
     fabric.Image.fromURL(url, (img) => {
       canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
         scaleX: canvas.width / img.width,
@@ -213,7 +232,7 @@ async function handleGeneration() {
     });
 
   } catch {
-    alert("Backend error");
+    showNotification(noticationType.DANGER_COLOR, noticationType.DANGER_FONT_COLOR, `Backend error`);
   } finally {
     btn.disabled = false;
     stopTimer();

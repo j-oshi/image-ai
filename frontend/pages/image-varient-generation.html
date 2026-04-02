@@ -168,7 +168,7 @@ const showNotification = (bcolor = null, fcolor = null, msg = null) => {
   toastNotification.setAttribute('background', bcolor || '#000');
   toastNotification.setAttribute('color', fcolor || '#fff');
   toastNotification.setAttribute("message", msg || 'Notification');
-}
+};
 
 async function fetchImage(prompt) {
   const body = new URLSearchParams();

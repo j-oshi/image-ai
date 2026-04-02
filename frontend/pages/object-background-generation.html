@@ -193,9 +193,26 @@ button:disabled {
 <div class="footer">
   © 2026 Vectragen Platform
 </div>
-
+<toast-notification disapperance-timer timeout="12000"></toast-notification>
+<script src="../scripts/components/toast-notification.js"></script>
 <script>
 let canvas, boundingBox, timerInterval;
+const noticationType = {
+  PRIMARY_COLOR :'#fff',
+  PRIMARY_FONT_COLOR: '#000',
+  WARNING_COLOR: '#ffcc00',
+  WARNING_FONT_COLOR: '#5c0b0b',
+  DANGER_COLOR: '#f44336',
+  DANGER_FONT_COLOR: '#fff',
+  SUCCESS_COLOR: '#1a68bc',
+  SUCCESS_FONT_COLOR: '#fff'
+};
+const toastNotification = document.querySelector("toast-notification");
+const showNotification = (bcolor = null, fcolor = null, msg = null) => {
+  toastNotification.setAttribute('background', bcolor || '#000');
+  toastNotification.setAttribute('color', fcolor || '#fff');
+  toastNotification.setAttribute("message", msg || 'Notification');
+};
 
 window.onload = () => {
   canvas = new fabric.Canvas('crop-canvas', {
@@ -237,7 +254,7 @@ window.onload = () => {
         formData.append('prompt', prompt);
         formData.append('image', fullCanvasBlob, 'image.png');
         formData.append('mask', maskBlob, 'mask.png');
-        
+        showNotification(noticationType.PRIMARY_COLOR, noticationType.PRIMARY_FONT_COLOR, `Generating image ...`);
         const resp = await fetch('http://localhost:5000/test-generate', {
             method: 'POST',
             body: formData
@@ -303,6 +320,7 @@ window.onload = () => {
         }, 100);
 
         try {
+            showNotification(noticationType.PRIMARY_COLOR, noticationType.PRIMARY_FONT_COLOR, `Generating image ...`);
             const requests = [
                 fetchImage(promptInput, fullImageBlob, maskBlob),
                 fetchImage(promptInput, fullImageBlob, maskBlob),
@@ -311,7 +329,7 @@ window.onload = () => {
             ];
 
             const outputs = await Promise.all(requests);
-            
+            showNotification(noticationType.SUCCESS_COLOR, noticationType.SUCCESS_FONT_COLOR, `Image Generation Successful`);
             clearInterval(timerInterval);
             status.innerText = "Batch Complete!";
 
@@ -330,6 +348,7 @@ window.onload = () => {
         } catch (err) {
             clearInterval(timerInterval);
             console.error(err);
+            showNotification(noticationType.DANGER_COLOR, noticationType.DANGER_FONT_COLOR, `Error: Check backend.`);
             status.innerText = "Error: Check backend.";
         } finally {
             btn.disabled = false;
